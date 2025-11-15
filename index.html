@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hauling Quote Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Get a Hauling Quote</h1>
+    <form id="quote-form">
+        <label>From Postcode:</label><input type="text" name="from" required><br>
+        <label>To Postcode:</label><input type="text" name="to" required><br>
+        <label>Quantity (kg):</label><input type="number" name="quantity" step="0.1" required><br>
+        <label>Material:</label><input type="text" name="material" required><br>
+        <button type="submit">Get Quote</button>
+    </form>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('quote-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(e.target));
+            const response = await fetch('/quote', {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) {
+                document.getElementById('output').innerHTML = '<p>Error: Invalid input</p>';
+                return;
+            }
+            const html = await response.text();
+            document.getElementById('output').innerHTML = html + `
+                <form action="https://www.christopherwardconstruction.com/contact.php" method="post">  <!-- Your site's PHP URL -->
+                    <input type="hidden" name="quote_details" value="${html.replace(/"/g, '&quot;')}">  <!-- Escaped quote HTML -->
+                    <label>Name:</label><input type="text" name="name" required><br>
+                    <label>Email:</label><input type="email" name="email" required><br>
+                    <label>Phone:</label><input type="tel" name="phone"><br>
+                    <button type="submit">Send Quote to Us</button>
+                </form>
+            `;
+        });
+    </script>
+</body>
+</html>

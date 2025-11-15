@@ -1,0 +1,22 @@
+[package]
+name = "hauling_web"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+tower-http = { version = "0.5", features = ["fs"] }     # For serving index.html
+reqwest = { version = "0.12.24", features = ["json"] }
+lettre = { version = "0.11", default-features = false, features = ["tokio1", "tokio1-rustls-tls"] }                                     # For email sending
+rusqlite = "0.31"
+time = "0.3"                                            # For timestamps
+axum-extra = { version = "0.9", features = ["cookie"] } # For cookies
+tower-cookies = "0.10"                                  # For session-like cookie management
+argon2 = "0.5"
+rand = "0.8"     
+
+[[bin]]
+name = "generate_hash"
+path = "tools/generate_hash.rs"  # Adjust path as needed                                       # For generating salts if needed

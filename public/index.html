@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hauling Quote Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Get a Hauling Quote</h1>
+    <form id="quote-form">
+        <label>From Postcode:</label><input type="text" name="from" required><br>
+        <label>To Postcode:</label><input type="text" name="to" required><br>
+        <label>Quantity (kg):</label><input type="number" name="quantity" step="0.1" required><br>
+        <label>Material:</label><input type="text" name="material" required><br>
+        <label>Email (optional, to receive quote copy):</label><input type="email" name="email"><br>  <!-- New field -->
+        <button type="submit">Get Quote</button>
+    </form>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('quote-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(e.target));
+            const response = await fetch('/quote', {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) {
+                document.getElementById('output').innerHTML = '<p>Error: Invalid input</p>';
+                return;
+            }
+            const html = await response.text();
+            document.getElementById('output').innerHTML = html;  // Display quote; email handled server-side
+        });
+    </script>
+</body>
+</html>
