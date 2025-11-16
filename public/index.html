@@ -10,27 +10,82 @@
     <form id="quote-form">
         <label>From Postcode:</label><input type="text" name="from" required><br>
         <label>To Postcode:</label><input type="text" name="to" required><br>
-        <label>Quantity (kg):</label><input type="number" name="quantity" step="0.1" required><br>
+        <label>Quantity (kg):</label><input type="number" name="quantity" step="0.1" min="0.1" required><br>
         <label>Material:</label><input type="text" name="material" required><br>
-        <label>Email (optional, to receive quote copy):</label><input type="email" name="email"><br>  <!-- New field -->
+        <label>Email (optional, to receive quote copy):</label><input type="email" name="email"><br>
         <button type="submit">Get Quote</button>
+        <button type="reset" id="reset-btn">Reset</button>
     </form>
     <div id="output"></div>
 
     <script>
-        document.getElementById('quote-form').addEventListener('submit', async (e) => {
+        const form = document.getElementById('quote-form');
+        const output = document.getElementById('output');
+        const resetBtn = document.getElementById('reset-btn');
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new URLSearchParams(new FormData(e.target));
-            const response = await fetch('/quote', {
-                method: 'POST',
-                body: formData
-            });
-            if (!response.ok) {
-                document.getElementById('output').innerHTML = '<p>Error: Invalid input</p>';
+
+            // Client-side validation
+            const from = form.from.value.trim();
+            const to = form.to.value.trim();
+            const quantity = parseFloat(form.quantity.value);
+            const material = form.material.value.trim();
+            const email = form.email.value.trim();
+
+            if (!from || !to || !material || isNaN(quantity) || quantity <= 0) {
+                output.innerHTML = '<p class="error">Please fill all required fields with valid values (quantity > 0).</p>';
                 return;
             }
-            const html = await response.text();
-            document.getElementById('output').innerHTML = html;  // Display quote; email handled server-side
+
+            // Basic UK postcode regex (e.g., "SW1A 1AA" or "EC2A 4AA")
+            const postcodeRegex = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i;
+            if (!postcodeRegex.test(from) || !postcodeRegex.test(to)) {
+                output.innerHTML = '<p class="error">Invalid postcode format (e.g., "SW1A 1AA").</p>';
+                return;
+            }
+
+            if (email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+                output.innerHTML = '<p class="error">Invalid email format.</p>';
+                return;
+            }
+
+            // Show loading indicator
+            output.innerHTML = '<p>Calculating quote... Please wait.</p>';
+
+            const formData = new URLSearchParams(new FormData(form));
+
+            try {
+                const response = await fetch('/quote', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(response.status === 400 ? 'Invalid input (check postcodes)' : 'Server error');
+                }
+
+                const html = await response.text();
+                output.innerHTML = html + '<p>Quote sent to email if provided.</p>' + `
+                    <h3>Send This Quote to Us</h3>
+                    <form action="https://www.christopherwardconstruction.com/contact.php" method="post">
+                        <input type="hidden" name="quote_details" value="${html.replace(/"/g, '&quot;')}">
+                        <label>Name:</label><input type="text" name="name" required><br>
+                        <label>Email:</label><input type="email" name="email" required><br>
+                        <label>Phone:</label><input type="tel" name="phone"><br>
+                        <button type="submit">Send Quote</button>
+                    </form>
+                `;
+            } catch (error) {
+                output.innerHTML = `<p class="error">Error: ${error.message}. Try again.</p>`;
+            }
+        });
+
+        // Reset form and output
+        resetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            form.reset();
+            output.innerHTML = '';
         });
     </script>
 </body>
