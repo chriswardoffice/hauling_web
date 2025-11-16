@@ -9,7 +9,7 @@ A web application for hauling logistics, built with Rust (via Cargo) and featuri
 
 ## Features
 
-- [Add your features here]
+- Sick features
 
 ## Database
 
